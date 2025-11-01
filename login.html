@@ -28,31 +28,33 @@
             const email = document.getElementById("email").value;
             const password = document.getElementById("password").value;
 
-            fetch("http://localhost:3000/login", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        email,
-                        password,
-                        role
-                    })
+            // This is the corrected line.
+            // It now uses a relative path "/login" instead of a hard-coded localhost URL.
+            fetch("/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    email,
+                    password,
+                    role
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        document.getElementById("error-message").innerText = data.error;
-                    } else {
-                        const userId = data.user.id;
-                        localStorage.setItem("loggedIn", "true");
-                        localStorage.setItem("userId", userId);
-                        localStorage.setItem("role", role);
-                        const dashboardUrl = role === "student" ? `student_dashboard.html?id=${userId}` : `teacher_dashboard.html?id=${userId}`;
-                        window.location.href = dashboardUrl;
-                    }
-                })
-                .catch(error => console.error("Error:", error));
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById("error-message").innerText = data.error;
+                } else {
+                    const userId = data.user.id;
+                    localStorage.setItem("loggedIn", "true");
+                    localStorage.setItem("userId", userId);
+                    localStorage.setItem("role", role);
+                    const dashboardUrl = role === "student" ? `student_dashboard.html?id=${userId}` : `teacher_dashboard.html?id=${userId}`;
+                    window.location.href = dashboardUrl;
+                }
+            })
+            .catch(error => console.error("Error:", error));
         }
     </script>
 </body>
