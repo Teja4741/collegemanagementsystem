@@ -33,7 +33,7 @@
                 return;
             }
 
-            fetch(`http://localhost:5000/student/${userId}`)
+            fetch(`http://localhost:3000/student/${userId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
@@ -62,7 +62,7 @@
             localStorage.removeItem("loggedIn");
             localStorage.removeItem("userId");
             localStorage.removeItem("role");
-            window.location.href = "intro.html";
+            window.location.href = "/";
         }
     </script>
 </body>
