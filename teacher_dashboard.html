@@ -31,7 +31,7 @@
             const urlParams = new URLSearchParams(window.location.search);
             const teacherId = urlParams.get("id");
 
-            fetch(`http://localhost:3000/teacher/${teacherId}`)
+            fetch(`/teacher/${teacherId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {

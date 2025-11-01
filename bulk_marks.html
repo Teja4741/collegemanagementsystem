@@ -108,7 +108,7 @@
 
             for (const rollno of rollnos) {
                 try {
-                    const response = await fetch(`http://localhost:3000/student-by-rollno?rollno=${rollno}`);
+                    const response = await fetch(`/student-by-rollno?rollno=${rollno}`);
                     const student = await response.json();
                     if (!response.ok) {
                         errors.push(`Invalid rollno: ${rollno} - ${student.message}`);
@@ -136,7 +136,7 @@
             }
 
             // Fetch subjects
-            fetch(`http://localhost:3000/subjects?department=${department}&year=${year}&semester=${semester}`)
+            fetch(`/subjects?department=${department}&year=${year}&semester=${semester}`)
                 .then(response => response.json())
                 .then(subjects => {
                     if (subjects.length === 0) {
@@ -257,7 +257,7 @@
 
             // Submit marks first
             if (marks.length > 0) {
-                fetch("http://localhost:3000/marks/bulk", {
+                fetch("/marks/bulk", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(marks)
@@ -272,7 +272,7 @@
 
                     // Submit attendance after marks
                     if (attendance.length > 0) {
-                        fetch("http://localhost:3000/attendance/bulk", {
+                        fetch("/attendance/bulk", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify(attendance)
@@ -295,7 +295,7 @@
                 });
             } else if (attendance.length > 0) {
                 // Submit only attendance
-                fetch("http://localhost:3000/attendance/bulk", {
+                fetch("/attendance/bulk", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(attendance)

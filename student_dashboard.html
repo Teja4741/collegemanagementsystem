@@ -33,7 +33,7 @@
                 return;
             }
 
-            fetch(`http://localhost:3000/student/${userId}`)
+            fetch(`/student/${userId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
