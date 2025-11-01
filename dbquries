@@ -1,0 +1,190 @@
+CREATE TABLE students (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    rollno VARCHAR(20) UNIQUE NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    department VARCHAR(100),
+    section VARCHAR(10),
+    year INT,
+    semester INT,
+    phone VARCHAR(15),
+    address TEXT
+);
+CREATE TABLE attendance (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT,
+    subject VARCHAR(100),
+    date DATE NOT NULL,
+    status ENUM('Present', 'Absent', 'Late') NOT NULL,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+);
+CREATE TABLE marks (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT,
+    subject VARCHAR(100),
+    marks_obtained INT NOT NULL,
+    total_marks INT NOT NULL,
+    exam_type ENUM('Midterm', 'Final', 'Quiz', 'Assignment') NOT NULL,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+);
+
+ALTER TABLE marks ADD UNIQUE KEY unique_marks (student_id, subject, exam_type);
+CREATE TABLE teachers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    subject VARCHAR(100) NOT NULL,
+    department VARCHAR(100),
+    phone VARCHAR(15),
+    address TEXT
+);
+CREATE TABLE subjects (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    department VARCHAR(100),
+    year INT,
+    semester INT,
+    subject_name VARCHAR(100)
+);
+CREATE TABLE timetable (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    teacher_id INT,
+    day ENUM('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday') NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    subject VARCHAR(100) NOT NULL,
+    classroom VARCHAR(50),
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE
+);CREATE TABLE teacher_actions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    teacher_id INT,
+    student_id INT,
+    action_type ENUM('Attendance', 'Marks') NOT NULL,
+    action_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    details TEXT,
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+);
+DELIMITER //
+CREATE TRIGGER after_insert_attendance
+AFTER INSERT ON attendance
+FOR EACH ROW
+BEGIN
+    DECLARE t_id INT;
+
+    SELECT teacher_id INTO t_id 
+    FROM timetable 
+    WHERE subject = (SELECT subject FROM marks WHERE student_id = NEW.student_id LIMIT 1)
+    LIMIT 1;
+
+    
+    IF t_id IS NOT NULL THEN
+        INSERT INTO teacher_actions (teacher_id, student_id, action_type, details)
+        VALUES (t_id, NEW.student_id, 'Attendance', CONCAT('Attendance marked as ', NEW.status));
+    END IF;
+END;
+//
+DELIMITER ;
+
+DELIMITER ;
+-- triggers for marks
+DELIMITER //
+CREATE TRIGGER after_insert_marks
+AFTER INSERT ON marks
+FOR EACH ROW
+BEGIN
+    INSERT INTO teacher_actions (teacher_id, student_id, action_type, details)
+    VALUES (
+        (SELECT id FROM teachers WHERE subject = NEW.subject LIMIT 1),
+        NEW.student_id, 'Marks', CONCAT('Marks updated: ', NEW.marks_obtained, '/', NEW.total_marks)
+    );
+END;
+//
+DELIMITER ;
+
+
+INSERT INTO students (rollno, name, email, password, department, section, year, semester, phone, address) VALUES
+('CS1A001', 'sathvika', 'sathvika@example.com', 'password1', 'Computer Science', 'A', 1, 1, '1234567890', '123 Maple St'),
+('ME1B001', 'abc', 'abc@example.com', 'password2', 'Mechanical Engineering', 'B', 1, 1, '1234567891', '456 Oak St'),
+('ECE1A001', 'def', 'def@example.com', 'password3', 'Electronics and Communication Engineering', 'A', 1, 1, '1234567892', '789 Pine St'),
+('CE1A001', 'ghij', 'ghij@example.com', 'password4', 'Civil Engineering', 'A', 1, 1, '1234567893', '321 Birch St'),
+('CS1B001', 'klm', 'klm@example.com', 'password5', 'Computer Science', 'B', 1, 1, '1234567894', '654 Cedar St'),
+('IT1A001', 'nop', 'nop@example.com', 'password6', 'Information Technology', 'A', 1, 1, '1234567895', '987 Elm St'),
+('EEE1B001', 'qrs', 'qrs@example.com', 'password7', 'Electrical and Electronics Engineering', 'B', 1, 1, '1234567896', '654 Willow St');
+INSERT INTO teachers (name, email, password, subject, department, phone, address) VALUES
+('rrr', 'rrr.m@example.com', 'pass6', 'Mathematics', 'Computer Science', '9876543210', '111 Red St'),
+('sss', 'sss.w@example.com', 'pass7', 'Physics', 'Mechanical Engineering', '9876543211', '222 Blue St'),
+('aaa', 'aaa.a@example.com', 'pass8', 'Computer Science', 'Computer Science', '9876543212', '333 Green St'),
+('sas', 'sas.t@example.com', 'pass9', 'Chemistry', 'Civil Engineering', '9876543213', '444 Yellow St'),
+('yyy', 'yyy.j@example.com', 'pass10', 'Mechanical Design', 'Mechanical Engineering', '9876543214', '555 Purple St'),
+('bbb', 'bbb.i@example.com', 'pass11', 'Software Engineering', 'Information Technology', '9876543215', '666 Indigo St'),
+('ccc', 'ccc.d@example.com', 'pass12', 'Databases', 'Information Technology', '9876543216', '777 Violet St'),
+('ddd', 'ddd.n@example.com', 'pass13', 'Networks', 'Information Technology', '9876543217', '888 Brown St'),
+('eee', 'eee.o@example.com', 'pass14', 'Operating Systems', 'Information Technology', '9876543218', '999 Black St');
+INSERT INTO timetable (teacher_id, day, start_time, end_time, subject, classroom) VALUES
+(1, 'Monday', '09:00:00', '10:30:00', 'Mathematics', 'Room 101'),
+(2, 'Tuesday', '11:00:00', '12:30:00', 'Physics', 'Room 202'),
+(3, 'Wednesday', '10:00:00', '11:30:00', 'Computer Science', 'Lab 303'),
+(4, 'Thursday', '13:00:00', '14:30:00', 'Chemistry', 'Room 404'),
+(5, 'Friday', '15:00:00', '16:30:00', 'Mechanical Design', 'Workshop 505'),
+(6, 'Monday', '11:00:00', '12:30:00', 'Software Engineering', 'Lab 606'),
+(7, 'Tuesday', '13:00:00', '14:30:00', 'Databases', 'Lab 707'),
+(8, 'Wednesday', '15:00:00', '16:30:00', 'Networks', 'Lab 808'),
+(9, 'Thursday', '09:00:00', '10:30:00', 'Operating Systems', 'Lab 909');
+
+INSERT INTO subjects (department, year, semester, subject_name) VALUES
+('Computer Science', 1, 1, 'Mathematics'),
+('Computer Science', 1, 1, 'Physics'),
+('Computer Science', 1, 1, 'Chemistry'),
+('Computer Science', 1, 1, 'English'),
+('Computer Science', 1, 1, 'Computer Fundamentals'),
+('Computer Science', 1, 1, 'Engineering Drawing'),
+('Computer Science', 1, 1, 'Physics Lab'),
+('Computer Science', 1, 1, 'Chemistry Lab'),
+('Computer Science', 1, 1, 'Computer Fundamentals Lab'),
+('Computer Science', 1, 1, 'Engineering Drawing Lab'),
+('Computer Science', 1, 2, 'Data Structures'),
+('Computer Science', 1, 2, 'Algorithms'),
+('Computer Science', 1, 2, 'Discrete Math'),
+('Computer Science', 1, 2, 'Programming'),
+('Mechanical Engineering', 1, 1, 'Thermodynamics'),
+('Mechanical Engineering', 1, 1, 'Machine Design'),
+('Mechanical Engineering', 1, 1, 'Mathematics'),
+('Mechanical Engineering', 1, 1, 'Physics'),
+('Mechanical Engineering', 1, 1, 'Physics Lab'),
+('Mechanical Engineering', 1, 1, 'Chemistry Lab'),
+('Mechanical Engineering', 1, 2, 'Heat Transfer'),
+('Mechanical Engineering', 1, 2, 'Dynamics'),
+('Mechanical Engineering', 1, 2, 'Materials'),
+('Mechanical Engineering', 1, 2, 'Thermodynamics II'),
+('Civil Engineering', 1, 1, 'Structural Engineering'),
+('Civil Engineering', 1, 1, 'Geotechnical Engineering'),
+('Civil Engineering', 1, 1, 'Mathematics'),
+('Civil Engineering', 1, 1, 'Physics'),
+('Civil Engineering', 1, 1, 'Physics Lab'),
+('Civil Engineering', 1, 1, 'Chemistry Lab'),
+('Civil Engineering', 1, 2, 'Concrete Technology'),
+('Civil Engineering', 1, 2, 'Transportation Engineering'),
+('Civil Engineering', 1, 2, 'Environmental Engineering'),
+('Civil Engineering', 1, 2, 'Structural Analysis II'),
+('Electrical and Electronics Engineering', 1, 1, 'Electrical Machines'),
+('Electrical and Electronics Engineering', 1, 1, 'Power Systems'),
+('Electrical and Electronics Engineering', 1, 1, 'Mathematics'),
+('Electrical and Electronics Engineering', 1, 1, 'Physics'),
+('Electrical and Electronics Engineering', 1, 1, 'Physics Lab'),
+('Electrical and Electronics Engineering', 1, 1, 'Chemistry Lab'),
+('Electrical and Electronics Engineering', 1, 2, 'Power Systems II'),
+('Electrical and Electronics Engineering', 1, 2, 'Electrical Machines II'),
+('Electrical and Electronics Engineering', 1, 2, 'Control Systems II'),
+('Electrical and Electronics Engineering', 1, 2, 'Electronics II'),
+('Information Technology', 1, 1, 'Data Structures'),
+('Information Technology', 1, 1, 'Algorithms'),
+('Information Technology', 1, 1, 'Mathematics'),
+('Information Technology', 1, 1, 'Physics'),
+('Information Technology', 1, 1, 'Physics Lab'),
+('Information Technology', 1, 1, 'Chemistry Lab'),
+('Information Technology', 1, 2, 'Software Engineering'),
+('Information Technology', 1, 2, 'Databases'),
+('Information Technology', 1, 2, 'Networks'),
+('Information Technology', 1, 2, 'Operating Systems');

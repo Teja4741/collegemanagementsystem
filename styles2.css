@@ -1,0 +1,51 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  overflow-x: hidden;
+}
+
+body {
+  background: url("https://media.cntraveler.com/photos/56953a3965492c403b26f6f0/master/pass/ucla-cr-alamy.jpg") 
+  no-repeat center center/cover;
+}
+
+.navbar {
+  background: rgba(0, 0, 0, 0.9) !important;
+}
+
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 90vh;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.hero h1 {
+  font-size: 3rem;
+  font-weight: bold;
+}
+
+.hero p {
+  font-size: 1.5rem;
+}
+
+.dropdown-menu {
+  background: rgba(0, 0, 0, 0.9) !important;
+  border: none;
+}
+
+.dropdown-menu .dropdown-item {
+  color: white !important;
+  padding: 10px;
+}
+
+.dropdown-menu .dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+
+footer {
+  font-size: 14px;
+}

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk Marks Entry</title>
+    <link rel="stylesheet" href="styles/common.css">
+</head>
+<body>
+    <div class="container-box">
+        <h2>Bulk Marks Entry</h2>
+        <form id="bulk-form">
+            <div class="row">
+                <div class="col-md-3">
+                    <select class="form-control mb-2" id="department" required>
+                        <option value="">Select Department</option>
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="Mechanical Engineering">Mechanical Engineering</option>
+                        <option value="Civil Engineering">Civil Engineering</option>
+                        <option value="Electrical and Electronics Engineering">Electrical and Electronics Engineering</option>
+                        <option value="Electronics and Communication Engineering">Electronics and Communication Engineering</option>
+                        <option value="Information Technology">Information Technology</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-control mb-2" id="year" required>
+                        <option value="">Year</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-control mb-2" id="semester" required>
+                        <option value="">Semester</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-control mb-2" id="section" required>
+                        <option value="">Section</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-control mb-2" id="exam-type" required>
+                        <option value="">Select Exam Type</option>
+                        <option value="Midterm">Midterm</option>
+                        <option value="Final">Final</option>
+                        <option value="Quiz">Quiz</option>
+                        <option value="Assignment">Assignment</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mb-2">
+                <label for="rollnos">Enter Roll Nos (one per line):</label>
+                <textarea class="form-control" id="rollnos" rows="3" placeholder="CS1A001&#10;CS1A002&#10;..."></textarea>
+            </div>
+            <button type="button" class="btn btn-secondary mb-2" id="load-data">Load and Verify Students & Subjects</button>
+        </form>
+        <div id="marks-table-container" style="display:none;">
+            <table class="table table-bordered" id="marks-table">
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Roll No</th>
+                        <th>Student Name</th>
+                        <!-- Subjects will be added here -->
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Students will be added here -->
+                </tbody>
+            </table>
+            <button type="button" class="btn btn-primary w-100" id="submit-marks">Submit All Marks</button>
+        </div>
+        <p id="message" class="message"></p>
+    </div>
+
+    <script>
+        document.getElementById("load-data").addEventListener("click", async function() {
+            const department = document.getElementById("department").value;
+            const year = document.getElementById("year").value;
+            const semester = document.getElementById("semester").value;
+            const section = document.getElementById("section").value;
+            const rollnosText = document.getElementById("rollnos").value.trim();
+
+            if (!department || !year || !semester || !section) {
+                alert("Please select department, year, semester, and section");
+                return;
+            }
+            if (!rollnosText) {
+                alert("Please enter roll numbers in the textarea");
+                return;
+            }
+
+            const rollnos = rollnosText.split('\n').map(r => r.trim()).filter(r => r);
+            if (rollnos.length === 0) {
+                alert("No valid roll numbers entered");
+                return;
+            }
+
+            const verifiedStudents = [];
+            const errors = [];
+
+            for (const rollno of rollnos) {
+                try {
+                    const response = await fetch(`http://localhost:5000/student-by-rollno?rollno=${rollno}`);
+                    const student = await response.json();
+                    if (!response.ok) {
+                        errors.push(`Invalid rollno: ${rollno} - ${student.message}`);
+                        continue;
+                    }
+                    // Optional: Validate against selected dept/year/semester/section
+                    if (student.department !== department || student.year != year || student.semester != semester || student.section !== section) {
+                        errors.push(`Rollno ${rollno} does not match selected department/year/semester/section`);
+                        continue;
+                    }
+                    verifiedStudents.push(student);
+                } catch (error) {
+                    errors.push(`Network error for rollno ${rollno}`);
+                }
+            }
+
+            if (errors.length > 0) {
+                alert("Verification errors:\n" + errors.join('\n'));
+                if (verifiedStudents.length === 0) return;
+            }
+
+            if (verifiedStudents.length === 0) {
+                alert("No valid students found");
+                return;
+            }
+
+            // Fetch subjects
+            fetch(`http://localhost:5000/subjects?department=${department}&year=${year}&semester=${semester}`)
+                .then(response => response.json())
+                .then(subjects => {
+                    if (subjects.length === 0) {
+                        alert("No subjects found");
+                        return;
+                    }
+
+                    generateTable(verifiedStudents, subjects);
+                })
+                .catch(err => alert("Error fetching subjects: " + err.message));
+        });
+
+        function generateTable(students, subjects) {
+            const table = document.getElementById("marks-table");
+            const thead = table.querySelector("thead tr");
+            const tbody = table.querySelector("tbody");
+
+            // Clear existing
+            thead.innerHTML = "<th>Student ID</th><th>Roll No</th><th>Student Name</th>";
+            tbody.innerHTML = "";
+
+            // Add subject headers
+            subjects.forEach(subject => {
+                const th = document.createElement("th");
+                th.textContent = subject;
+                thead.appendChild(th);
+            });
+
+            // Add student rows
+            students.forEach(student => {
+                const tr = document.createElement("tr");
+                tr.dataset.studentId = student.id;
+                tr.innerHTML = `<td>${student.id}</td><td>${student.rollno}</td><td>${student.name}</td>`;
+
+                subjects.forEach(subject => {
+                    const td = document.createElement("td");
+                    td.innerHTML = `
+                        <div class="row g-1">
+                            <div class="col-6">
+                                <input type="number" class="form-control marks-input" placeholder="Obtained" data-subject="${subject}" data-type="obtained" required>
+                            </div>
+                            <div class="col-6">
+                                <input type="number" class="form-control marks-input" placeholder="Total" data-subject="${subject}" data-type="total" required>
+                            </div>
+                        </div>
+                        <div class="mt-1">
+                            <select class="form-control attendance-select" data-subject="${subject}">
+                                <option value="">Attendance</option>
+                                <option value="Present">Present</option>
+                                <option value="Absent">Absent</option>
+                                <option value="Late">Late</option>
+                            </select>
+                        </div>
+                    `;
+                    tr.appendChild(td);
+                });
+
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById("marks-table-container").style.display = "block";
+        }
+
+        document.getElementById("submit-marks").addEventListener("click", function() {
+            const examType = document.getElementById("exam-type").value;
+            if (!examType) {
+                alert("Please select exam type");
+                return;
+            }
+
+            const marks = [];
+            const attendance = [];
+            const tbody = document.querySelector("#marks-table tbody");
+            const rows = tbody.querySelectorAll("tr");
+
+            for (const row of rows) {
+                const studentId = parseInt(row.dataset.studentId);
+                if (!studentId) {
+                    alert("Student ID missing for a row");
+                    return;
+                }
+
+                // Get subject columns (after id, rollno, name)
+                const subjectTds = Array.from(row.querySelectorAll("td")).slice(3);
+                subjectTds.forEach(td => {
+                    const obtained = td.querySelector('input[data-type="obtained"]');
+                    const total = td.querySelector('input[data-type="total"]');
+                    const attendanceSelect = td.querySelector('.attendance-select');
+                    const subject = obtained.dataset.subject;
+                    const marksObtained = obtained.value;
+                    const totalMarks = total.value;
+                    const attendanceStatus = attendanceSelect.value;
+
+                    if (marksObtained && totalMarks) {
+                        marks.push({
+                            student_id: studentId,
+                            subject: subject,
+                            exam_type: examType,
+                            marks_obtained: marksObtained,
+                            total_marks: totalMarks
+                        });
+                    }
+
+                    if (attendanceStatus) {
+                        attendance.push({
+                            student_id: studentId,
+                            subject: subject,
+                            status: attendanceStatus
+                        });
+                    }
+                });
+            }
+
+            if (marks.length === 0 && attendance.length === 0) {
+                alert("No marks or attendance entered");
+                return;
+            }
+
+            // Submit marks first
+            if (marks.length > 0) {
+                fetch("http://localhost:5000/marks/bulk", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(marks)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const messageBox = document.getElementById("message");
+                    messageBox.innerText = data.message || data.error;
+                    messageBox.className = "message " + (data.error ? "error" : "success");
+                    messageBox.style.display = "block";
+                    setTimeout(() => { messageBox.style.display = "none"; }, 3000);
+
+                    // Submit attendance after marks
+                    if (attendance.length > 0) {
+                        fetch("http://localhost:5000/attendance/bulk", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(attendance)
+                        })
+                        .then(attResponse => attResponse.json())
+                        .then(attData => {
+                            messageBox.innerText += " | " + (attData.message || attData.error);
+                        })
+                        .catch(err => {
+                            messageBox.innerText += " | Attendance error: " + err.message;
+                        });
+                    }
+                })
+                .catch(err => {
+                    const messageBox = document.getElementById("message");
+                    messageBox.innerText = "Marks error: " + err.message;
+                    messageBox.className = "message error";
+                    messageBox.style.display = "block";
+                    setTimeout(() => { messageBox.style.display = "none"; }, 3000);
+                });
+            } else if (attendance.length > 0) {
+                // Submit only attendance
+                fetch("http://localhost:5000/attendance/bulk", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(attendance)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const messageBox = document.getElementById("message");
+                    messageBox.innerText = data.message || data.error;
+                    messageBox.className = "message " + (data.error ? "error" : "success");
+                    messageBox.style.display = "block";
+                    setTimeout(() => { messageBox.style.display = "none"; }, 3000);
+                })
+                .catch(err => {
+                    const messageBox = document.getElementById("message");
+                    messageBox.innerText = "Attendance error: " + err.message;
+                    messageBox.className = "message error";
+                    messageBox.style.display = "block";
+                    setTimeout(() => { messageBox.style.display = "none"; }, 3000);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

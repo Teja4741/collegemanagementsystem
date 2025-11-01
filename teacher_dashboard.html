@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard</title>
+    <link rel="stylesheet" href="styles/common.css">
+</head>
+
+<body>
+    <div class="container-box">
+        <h2>Teacher Dashboard</h2>
+        <div class="row">
+            <div class="col-md-4 teacher-details">
+                <h3>Teacher Details</h3>
+                <div id="teacher-info"></div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="form-box">
+                    <h3>Marks Management</h3>
+                    <a href="bulk_marks.html" class="btn btn-primary">Enter Bulk Marks for Class</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const teacherId = urlParams.get("id");
+
+            fetch(`http://localhost:5000/teacher/${teacherId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        document.getElementById("teacher-info").innerHTML = `<p class="error">${data.error}</p>`;
+                    } else {
+                        document.getElementById("teacher-info").innerHTML = `
+                            <p><strong>Name:</strong> ${data.name}</p>
+                            <p><strong>Email:</strong> ${data.email}</p>
+                            <p><strong>Subject:</strong> ${data.subject}</p>
+                            <p><strong>Schedule:</strong> ${data.schedule}</p>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById("teacher-info").innerHTML = `<p class="error">Error loading teacher data.</p>`;
+                    console.error("Error:", error);
+                });
+        };
+
+
+    </script>
+</body>
+</html>

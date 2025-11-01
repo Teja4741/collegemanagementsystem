@@ -1,0 +1,54 @@
+go<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="styles/common.css">
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <h2>Welcome <span id="user-name"></span></h2>
+        <div id="student-dashboard" style="display: none;">
+            <h3>Student Details</h3>
+            <p><b>Email:</b> <span id="student-email"></span></p>
+            <h3>Marks</h3>
+            <ul id="marks-list"></ul>
+            <h3>Attendance</h3>
+            <ul id="attendance-list"></ul>
+        </div>
+
+        <div id="teacher-dashboard" style="display: none;">
+            <h3>Update Student Marks</h3>
+            <input type="number" id="student-id" placeholder="Student ID">
+            <input type="text" id="subject" placeholder="Subject">
+            <input type="number" id="marks-obtained" placeholder="Marks Obtained">
+            <input type="number" id="total-marks" placeholder="Total Marks">
+            <select id="exam-type">
+                <option value="Midterm">Midterm</option>
+                <option value="Final">Final</option>
+                <option value="Quiz">Quiz</option>
+                <option value="Assignment">Assignment</option>
+            </select>
+            <button onclick="updateMarks()">Submit Marks</button>
+
+            <h3>Mark Attendance</h3>
+            <input type="number" id="att-student-id" placeholder="Student ID">
+            <input type="date" id="date">
+            <select id="status">
+                <option value="Present">Present</option>
+                <option value="Absent">Absent</option>
+                <option value="Late">Late</option>
+            </select>
+            <button onclick="updateAttendance()">Submit Attendance</button>
+        </div>
+
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

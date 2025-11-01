@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="login-container">
+        <h2>Login</h2>
+        <label for="role">Select Role:</label>
+        <select id="role">
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+        </select>
+        <input type="email" id="email" placeholder="Enter Email">
+        <input type="password" id="password" placeholder="Enter Password">
+        <button onclick="login()">Login</button>
+        <p id="error-message"></p>
+    </div>
+
+    <script>
+        function login() {
+            const role = document.getElementById("role").value;
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            fetch("http://localhost:5000/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        email,
+                        password,
+                        role
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        document.getElementById("error-message").innerText = data.error;
+                    } else {
+                        const userId = data.user.id;
+                        localStorage.setItem("loggedIn", "true");
+                        localStorage.setItem("userId", userId);
+                        localStorage.setItem("role", role);
+                        const dashboardUrl = role === "student" ? `student_dashboard.html?id=${userId}` : `teacher_dashboard.html?id=${userId}`;
+                        window.location.href = dashboardUrl;
+                    }
+                })
+                .catch(error => console.error("Error:", error));
+        }
+    </script>
+</body>
+
+</html>

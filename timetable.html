@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam and Class Timetable</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: url('https://th.bing.com/th/id/OIP.9Yv1tO837FCgbxMfYOqDBgHaEv?rs=1&pid=ImgDetMain') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+        }
+
+        .timetable-container {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        table {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        table th,
+        table td {
+            text-align: center;
+        }
+
+        table th {
+            cursor: pointer;
+        }
+
+        .dropdown-menu {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .dropdown-item {
+            color: white;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container mt-5">
+        <div class="timetable-container">
+            <h2 class="text-center" id="timetableTitle">Exam Timetable</h2>
+            <div class="d-flex justify-content-center mt-3 mb-3">
+                <div class="dropdown me-3">
+                    <button class="btn btn-primary dropdown-toggle" type="button" id="typeDropdown"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        Select Timetable Type
+                    </button>
+                    <ul class="dropdown-menu" id="typeMenu">
+                        <li><a class="dropdown-item" href="#" data-type="exam">Exam Timetable</a></li>
+                        <li><a class="dropdown-item" href="#" data-type="class">Class Timetable</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="d-flex justify-content-center mt-3">
+                <div class="dropdown me-3">
+                    <button class="btn btn-primary dropdown-toggle" type="button" id="yearDropdown"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        Select Year
+                    </button>
+                    <ul class="dropdown-menu" id="yearMenu">
+                        <li><a class="dropdown-item" href="#" data-year="1st Year">1st Year</a></li>
+                        <li><a class="dropdown-item" href="#" data-year="2nd Year">2nd Year</a></li>
+                        <li><a class="dropdown-item" href="#" data-year="3rd Year">3rd Year</a></li>
+                        <li><a class="dropdown-item" href="#" data-year="4th Year">4th Year</a></li>
+                    </ul>
+                </div>
+
+                <div class="me-3">
+                    <button class="btn btn-primary" id="semester1Btn" disabled>Semester 1</button>
+                    <button class="btn btn-primary" id="semester2Btn" disabled>Semester 2</button>
+                </div>
+
+                <div class="dropdown me-3">
+                    <button class="btn btn-primary dropdown-toggle" type="button" id="deptDropdown"
+                        data-bs-toggle="dropdown" aria-expanded="false" disabled>
+                        Select Department
+                    </button>
+                    <ul class="dropdown-menu" id="deptMenu">
+                        <li><a class="dropdown-item" href="#" data-dept="CSE">Computer Science</a></li>
+                        <li><a class="dropdown-item" href="#" data-dept="ECE">ECE</a></li>
+                        <li><a class="dropdown-item" href="#" data-dept="ME">Mechanical</a></li>
+                        <li><a class="dropdown-item" href="#" data-dept="CE">Civil Engineering</a></li>
+                        <li><a class="dropdown-item" href="#" data-dept="EEE">Electrical and Electronics Engineering</a>
+                        </li>
+                        <li><a class="dropdown-item" href="#" data-dept="IT">Information Technology</a></li>
+                    </ul>
+                </div>
+
+                <div class="dropdown">
+                    <button class="btn btn-primary dropdown-toggle" type="button" id="sectionDropdown"
+                        data-bs-toggle="dropdown" aria-expanded="false" disabled>
+                        Select Section
+                    </button>
+                    <ul class="dropdown-menu" id="sectionMenu"></ul>
+                </div>
+            </div>
+
+            <table class="table table-bordered mt-3" id="timetable">
+                <thead id="tableHead">
+                    <tr>
+                        <th>Subject</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function generateClassSchedule(subjects) {
+            const days = ["MON", "TUE", "WED", "THU", "FRI", "SAT"];
+            const times = ["9.20AM - 10.20AM", "10.20AM - 11.20AM", "11.20AM - 12.20PM", "1.00PM - 2.00PM", "2.00PM - 3.00PM", "3.00PM - 4.00PM"];
+            const teachers = ['SAR', 'GSK', 'AMN', 'KML', 'MAN', 'SVH', 'TMI'];
+            const rooms = ['B316', 'B319', 'B321', 'B315'];
+            let schedule = {};
+            let subjectIndex = 0;
+            days.forEach(day => {
+                schedule[day] = [];
+                if (day === 'WED') {
+                    schedule[day].push({ time: "9.20AM - 4.00PM", subject: "Training", room: "" });
+                } else {
+                    times.forEach(time => {
+                        const subject = subjects[subjectIndex % subjects.length];
+                        const teacher = teachers[subjectIndex % teachers.length];
+                        const room = rooms[subjectIndex % rooms.length];
+                        schedule[day].push({ time, subject: `${subject} [${teacher}]`, room });
+                        subjectIndex++;
+                    });
+                }
+            });
+            return schedule;
+        }
+
+        // Function to clear the timetable table
+        function clearTimetable() {
+            document.getElementById("timetable").querySelector("tbody").innerHTML = "";
+            updateTableHeaders();
+        }
+
+        // Function to update the table headers based on the timetable type
+        function updateTableHeaders() {
+            const tableHead = document.getElementById("tableHead");
+            tableHead.innerHTML = '';
+            let newHeaderRow = document.createElement("tr");
+
+            if (timetableType === 'exam') {
+                newHeaderRow.innerHTML = `
+                    <th data-column="0">Subject</th>
+                    <th data-column="1">Date</th>
+                    <th data-column="2">Time</th>
+                `;
+            } else { // class timetable
+                newHeaderRow.innerHTML = `
+                    <th data-column="0">Day</th>
+                    <th data-column="1">Time</th>
+                    <th data-column="2">Subject (Teacher)</th>
+                    <th data-column="3">Room</th>
+                `;
+            }
+            tableHead.appendChild(newHeaderRow);
+            addHeaderEventListeners();
+        }
+
+        // Function to display the timetable for the selected section
+        function displayTimetable(year, semester, dept, section) {
+            const tbody = document.getElementById("timetable").querySelector("tbody");
+            tbody.innerHTML = "";
+            let data;
+            let titleText;
+
+            if (timetableType === 'exam') {
+                data = [...timetables.exam[year][semester][dept][section]];
+                titleText = 'Exam Timetable';
+                // Sorting logic for exam timetable
+                if (sortColumn !== null) {
+                    data.sort((a, b) => {
+                        let valA, valB;
+                        if (sortColumn === 0) { // subject
+                            valA = a.subject.toLowerCase();
+                            valB = b.subject.toLowerCase();
+                        } else if (sortColumn === 1) { // date
+                            valA = new Date(a.date);
+                            valB = new Date(b.date);
+                        } else if (sortColumn === 2) { // time
+                            valA = a.time;
+                            valB = b.time;
+                        }
+                        return sortOrder === 'asc' ? (valA > valB ? 1 : valA < valB ? -1 : 0) : (valA < valB ? 1 : valA > valB ? -1 : 0);
+                    });
+                }
+
+                data.forEach(exam => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${exam.subject}</td>
+                        <td>${exam.date}</td>
+                        <td>${exam.time}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+            } else { // class timetable
+                // Extract subjects from exam data for the selected year, semester, dept, section
+                const examData = timetables.exam[year][semester][dept][section];
+                const subjects = examData.map(exam => exam.subject);
+                data = generateClassSchedule(subjects);
+                titleText = 'Class Timetable';
+
+                // Display logic for class timetable - grouping by day
+                const daysOrder = ["MON", "TUE", "WED", "THU", "FRI", "SAT"];
+                daysOrder.forEach(day => {
+                    if (data[day]) {
+                        data[day].forEach((classItem, index) => {
+                            const row = document.createElement("tr");
+                            const dayCell = index === 0 ? `<td rowspan="${data[day].length}">${day}</td>` : '';
+                            row.innerHTML = `
+                                ${dayCell}
+                                <td>${classItem.time}</td>
+                                <td>${classItem.subject}</td>
+                                <td>${classItem.room}</td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                    }
+                });
+                // Note: Class timetable is not sortable with this merged-cell display
+            }
+            document.getElementById("timetableTitle").innerText = titleText;
+        }
+
+        // Load sections for the selected department
+        function loadSections(year, semester, dept) {
+            const sectionMenu = document.getElementById("sectionMenu");
+            sectionMenu.innerHTML = "";
+            // Use the appropriate data structure based on the timetableType
+            const currentTimetables = timetables[timetableType];
+            if (timetableType === 'class') {
+                // For class timetable, load both sections A and B
+                sectionMenu.innerHTML = '<li><a class="dropdown-item" href="#" data-section="A">Section A</a></li><li><a class="dropdown-item" href="#" data-section="B">Section B</a></li>';
+                document.getElementById("sectionDropdown").disabled = false;
+            } else {
+                if (currentTimetables[year] && currentTimetables[year][semester] && currentTimetables[year][semester][dept]) {
+                    const sections = Object.keys(currentTimetables[year][semester][dept]);
+                    sections.forEach(section => {
+                        const li = document.createElement("li");
+                        li.innerHTML = `<a class="dropdown-item" href="#" data-section="${section}">Section ${section}</a>`;
+                        sectionMenu.appendChild(li);
+                    });
+                    document.getElementById("sectionDropdown").disabled = false;
+                } else {
+                     document.getElementById("sectionDropdown").disabled = true;
+                }
+            }
+        }
+
+        const timetables = {
+            // Your existing exam data structure is now nested under 'exam'
+            exam: {
+                "1st Year": {
+                    "Semester 1": {
+                        CSE: {
+                            A: [
+                                { subject: "Mathematics", date: "April 5, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Physics", date: "April 7, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Chemistry", date: "April 9, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "English", date: "April 11, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Computer Fundamentals", date: "April 13, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Engineering Drawing", date: "April 15, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Physics Lab", date: "April 16, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Chemistry Lab", date: "April 17, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Computer Fundamentals Lab", date: "April 18, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Engineering Drawing Lab", date: "April 19, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Mathematics", date: "April 6, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Chemistry", date: "April 8, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Physics", date: "April 10, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "English", date: "April 12, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Physics Lab", date: "April 13, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Chemistry Lab", date: "April 14, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        ECE: {
+                            A: [
+                                { subject: "Electronics", date: "April 10, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Digital Circuits", date: "April 12, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Mathematics", date: "April 14, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Physics", date: "April 16, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Physics Lab", date: "April 17, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Chemistry Lab", date: "April 18, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Signals & Systems", date: "April 11, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Communication", date: "April 13, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Electronics", date: "April 15, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Digital Circuits", date: "April 17, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Physics Lab", date: "April 18, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Chemistry Lab", date: "April 19, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        ME: {
+                            A: [
+                                { subject: "Thermodynamics", date: "April 15, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Machine Design", date: "April 17, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Mathematics", date: "April 19, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Physics", date: "April 21, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Physics Lab", date: "April 22, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Chemistry Lab", date: "April 23, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+
+                            B: [
+                                { subject: "Fluid Mechanics", date: "April 16, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Manufacturing", date: "April 18, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Thermodynamics", date: "April 20, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Machine Design", date: "April 22, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Physics Lab", date: "April 23, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Chemistry Lab", date: "April 24, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        CE: {
+                            A: [
+                                { subject: "Structural Engineering", date: "April 15, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Geotechnical Engineering", date: "April 17, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Mathematics", date: "April 19, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Physics", date: "April 21, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Physics Lab", date: "April 22, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Chemistry Lab", date: "April 23, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Surveying", date: "April 16, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Construction Materials", date: "April 18, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Structural Engineering", date: "April 20, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Geotechnical Engineering", date: "April 22, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Physics Lab", date: "April 23, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Chemistry Lab", date: "April 24, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        EEE: {
+                            A: [
+                                { subject: "Electrical Machines", date: "April 15, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Power Systems", date: "April 17, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Mathematics", date: "April 19, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Physics", date: "April 21, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Physics Lab", date: "April 22, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Chemistry Lab", date: "April 23, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Control Systems", date: "April 16, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Electronics", date: "April 18, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Electrical Machines", date: "April 20, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Power Systems", date: "April 22, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Physics Lab", date: "April 23, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Chemistry Lab", date: "April 24, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        IT: {
+                            A: [
+                                { subject: "Data Structures", date: "April 15, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Algorithms", date: "April 17, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Mathematics", date: "April 19, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Physics", date: "April 21, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Physics Lab", date: "April 22, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Chemistry Lab", date: "April 23, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Programming", date: "April 16, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Web Development", date: "April 18, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Data Structures", date: "April 20, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Algorithms", date: "April 22, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Physics Lab", date: "April 23, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Chemistry Lab", date: "April 24, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        }
+                    },
+                    "Semester 2": {
+                        CSE: {
+                            A: [
+                                { subject: "Data Structures", date: "May 5, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Algorithms", date: "May 7, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Discrete Math", date: "May 9, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Programming", date: "May 11, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Data Structures", date: "May 6, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Algorithms", date: "May 8, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Discrete Math", date: "May 10, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Programming", date: "May 12, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        ECE: {
+                            A: [
+                                { subject: "Microprocessors", date: "May 10, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Control Systems", date: "May 12, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Signals", date: "May 14, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Circuits", date: "May 16, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Microprocessors", date: "May 11, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Control Systems", date: "May 13, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Signals", date: "May 15, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Circuits", date: "May 17, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        ME: {
+                            A: [
+                                { subject: "Heat Transfer", date: "May 15, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Dynamics", date: "May 17, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Materials", date: "May 19, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Thermodynamics II", date: "May 21, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Heat Transfer", date: "May 16, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Dynamics", date: "May 18, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Materials", date: "May 20, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Thermodynamics II", date: "May 22, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        CE: {
+                            A: [
+                                { subject: "Concrete Technology", date: "May 15, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Transportation Engineering", date: "May 17, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Environmental Engineering", date: "May 19, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Structural Analysis II", date: "May 21, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Concrete Technology", date: "May 16, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Transportation Engineering", date: "May 18, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Environmental Engineering", date: "May 20, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Structural Analysis II", date: "May 22, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        EEE: {
+                            A: [
+                                { subject: "Power Systems II", date: "May 15, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Electrical Machines II", date: "May 17, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Control Systems II", date: "May 19, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Electronics II", date: "May 21, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Power Systems II", date: "May 16, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Electrical Machines II", date: "May 18, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Control Systems II", date: "May 20, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Electronics II", date: "May 22, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        IT: {
+                            A: [
+                                { subject: "Software Engineering", date: "May 15, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Databases", date: "May 17, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Networks", date: "May 19, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Operating Systems", date: "May 21, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Software Engineering", date: "May 16, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Databases", date: "May 18, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Networks", date: "May 20, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Operating Systems", date: "May 22, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        }
+                    }
+                },
+                "2nd Year": {
+                    "Semester 1": {
+                        CSE: {
+                            A: [
+                                { subject: "Operating Systems", date: "April 5, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Databases", date: "April 7, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Networks", date: "April 9, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Software Engineering", date: "April 11, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Operating Systems", date: "April 6, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Databases", date: "April 8, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Networks", date: "April 10, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Software Engineering", date: "April 12, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        ECE: {
+                            A: [
+                                { subject: "Embedded Systems", date: "April 10, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "VLSI", date: "April 12, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Analog Circuits", date: "April 14, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Digital Signal Processing", date: "April 16, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Embedded Systems", date: "April 11, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "VLSI", date: "April 13, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Analog Circuits", date: "April 15, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Digital Signal Processing", date: "April 17, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        ME: {
+                            A: [
+                                { subject: "CAD/CAM", date: "April 15, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Robotics", date: "April 17, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Automotive", date: "April 19, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Mechatronics", date: "April 21, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "CAD/CAM", date: "April 16, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Robotics", date: "April 18, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Automotive", date: "April 20, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Mechatronics", date: "April 22, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        CE: {
+                            A: [
+                                { subject: "Construction Management", date: "April 5, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Hydraulics", date: "April 7, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Soil Mechanics", date: "April 9, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Building Materials", date: "April 11, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Construction Management", date: "April 6, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Hydraulics", date: "April 8, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Soil Mechanics", date: "April 10, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Building Materials", date: "April 12, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        EEE: {
+                            A: [
+                                { subject: "Power Electronics", date: "April 5, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Control Systems", date: "April 7, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Electrical Machines", date: "April 9, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Circuits", date: "April 11, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Power Electronics", date: "April 6, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Control Systems", date: "April 8, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Electrical Machines", date: "April 10, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Circuits", date: "April 12, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        IT: {
+                            A: [
+                                { subject: "Data Structures", date: "April 5, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Algorithms", date: "April 7, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Computer Networks", date: "April 9, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Database Systems", date: "April 11, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Data Structures", date: "April 6, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Algorithms", date: "April 8, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Computer Networks", date: "April 10, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Database Systems", date: "April 12, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        }
+                    },
+                    "Semester 2": {
+                        CSE: {
+                            A: [
+                                { subject: "AI", date: "May 5, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Machine Learning", date: "May 7, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Web Development", date: "May 9, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Cyber Security", date: "May 11, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "AI", date: "May 6, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Machine Learning", date: "May 8, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Web Development", date: "May 10, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Cyber Security", date: "May 12, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        ECE: {
+                            A: [
+                                { subject: "Wireless Communication", date: "May 10, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Optical Communication", date: "May 12, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Satellite Communication", date: "May 14, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Mobile Networks", date: "May 16, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Wireless Communication", date: "May 11, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Optical Communication", date: "May 13, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Satellite Communication", date: "May 15, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Mobile Networks", date: "May 17, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        ME: {
+                            A: [
+                                { subject: "Finite Element Analysis", date: "May 15, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Composite Materials", date: "May 17, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Nanotechnology", date: "May 19, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Biomechanics", date: "May 21, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Finite Element Analysis", date: "May 16, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Composite Materials", date: "May 18, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Nanotechnology", date: "May 20, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Biomechanics", date: "May 22, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        CE: {
+                            A: [
+                                { subject: "Concrete Technology", date: "May 5, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Transportation Engineering", date: "May 7, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Environmental Engineering", date: "May 9, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Structural Analysis II", date: "May 11, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Concrete Technology", date: "May 6, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Transportation Engineering", date: "May 8, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Environmental Engineering", date: "May 10, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Structural Analysis II", date: "May 12, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        EEE: {
+                            A: [
+                                { subject: "Power Systems II", date: "May 5, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Electrical Machines II", date: "May 7, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Control Systems II", date: "May 9, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Electronics II", date: "May 11, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Power Systems II", date: "May 6, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Electrical Machines II", date: "May 8, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Control Systems II", date: "May 10, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Electronics II", date: "May 12, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        IT: {
+                            A: [
+                                { subject: "Software Engineering", date: "May 5, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Databases", date: "May 7, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Networks", date: "May 9, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Operating Systems", date: "May 11, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Software Engineering", date: "May 6, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Databases", date: "May 8, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Networks", date: "May 10, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Operating Systems", date: "May 12, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        }
+                    }
+                },
+                "3rd Year": {
+                    "Semester 1": {
+                        CSE: {
+                            A: [
+                                { subject: "Compiler Design", date: "April 5, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Distributed Systems", date: "April 7, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Cloud Computing", date: "April 9, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Big Data", date: "April 11, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Compiler Design", date: "April 6, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Distributed Systems", date: "April 8, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Cloud Computing", date: "April 10, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Big Data", date: "April 12, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        ECE: {
+                            A: [
+                                { subject: "Power Electronics", date: "April 10, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Renewable Energy", date: "April 12, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Instrumentation", date: "April 14, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Biomedical Engineering", date: "April 16, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Power Electronics", date: "April 11, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Renewable Energy", date: "April 13, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Instrumentation", date: "April 15, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Biomedical Engineering", date: "April 17, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        ME: {
+                            A: [
+                                { subject: "Advanced Manufacturing", date: "April 15, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Aerospace Engineering", date: "April 17, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Quality Control", date: "April 19, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Supply Chain Management", date: "April 21, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Advanced Manufacturing", date: "April 16, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Aerospace Engineering", date: "April 18, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Quality Control", date: "April 20, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Supply Chain Management", date: "April 22, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        }
+                    },
+                    "Semester 2": {
+                        CSE: {
+                            A: [
+                                { subject: "Blockchain", date: "May 5, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "IoT", date: "May 7, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Quantum Computing", date: "May 9, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Ethics in Computing", date: "May 11, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Blockchain", date: "May 6, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "IoT", date: "May 8, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Quantum Computing", date: "May 10, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Ethics in Computing", date: "May 12, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        ECE: {
+                            A: [
+                                { subject: "5G Technology", date: "May 10, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "AI in Electronics", date: "May 12, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Smart Grids", date: "May 14, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Robotics in ECE", date: "May 16, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "5G Technology", date: "May 11, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "AI in Electronics", date: "May 13, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Smart Grids", date: "May 15, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Robotics in ECE", date: "May 17, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        ME: {
+                            A: [
+                                { subject: "Sustainable Engineering", date: "May 15, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Industrial Automation", date: "May 17, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Energy Systems", date: "May 19, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Project Management", date: "May 21, 2025", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Sustainable Engineering", date: "May 16, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Industrial Automation", date: "May 18, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Energy Systems", date: "May 20, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Project Management", date: "May 22, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        }
+                    }
+                },
+                "4th Year": {
+                    "Semester 1": {
+                        CSE: {
+                            A: [
+                                { subject: "Advanced Algorithms", date: "April 5, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Research Methodology", date: "April 7, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Capstone Project", date: "April 9, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Internship", date: "April 11, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Advanced Algorithms", date: "April 6, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Research Methodology", date: "April 8, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Capstone Project", date: "April 10, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Internship", date: "April 12, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        ECE: {
+                            A: [
+                                { subject: "Advanced Communication", date: "April 10, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Thesis", date: "April 12, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Industry Project", date: "April 14, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Elective", date: "April 16, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Advanced Communication", date: "April 11, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Thesis", date: "April 13, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Industry Project", date: "April 15, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Elective", date: "April 17, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        ME: {
+                            A: [
+                                { subject: "Advanced Mechanics", date: "April 15, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Final Year Project", date: "April 17, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Internship Report", date: "April 19, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Seminar", date: "April 21, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Advanced Mechanics", date: "April 16, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Final Year Project", date: "April 18, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Internship Report", date: "April 20, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Seminar", date: "April 22, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        }
+                    },
+                    "Semester 2": {
+                        CSE: {
+                            A: [
+                                { subject: "Graduation Project", date: "May 5, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Placement Training", date: "May 7, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Exit Interview", date: "May 9, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Alumni Meet", date: "May 11, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Graduation Project", date: "May 6, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Placement Training", date: "May 8, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Exit Interview", date: "May 10, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Alumni Meet", date: "May 12, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        ECE: {
+                            A: [
+                                { subject: "Final Thesis Defense", date: "May 10, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Certification Course", date: "May 12, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Job Fair", date: "May 14, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Commencement", date: "May 16, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Final Thesis Defense", date: "May 11, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Certification Course", date: "May 13, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Job Fair", date: "May 15, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Commencement", date: "May 17, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        },
+                        ME: {
+                            A: [
+                                { subject: "Project Presentation", date: "May 15, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Workshop", date: "May 17, 2024", time: "2:00 PM - 4:00 PM" },
+                                { subject: "Convocation", date: "May 19, 2024", time: "10:00 AM - 12:00 PM" },
+                                { subject: "Farewell", date: "May 21, 2024", time: "2:00 PM - 4:00 PM" }
+                            ],
+                            B: [
+                                { subject: "Project Presentation", date: "May 16, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Workshop", date: "May 18, 2024", time: "1:00 PM - 3:00 PM" },
+                                { subject: "Convocation", date: "May 20, 2024", time: "9:00 AM - 11:00 AM" },
+                                { subject: "Farewell", date: "May 22, 2024", time: "1:00 PM - 3:00 PM" }
+                            ]
+                        }
+                    }
+                }
+            }
+        };
+
+        let selectedYear = null;
+        let selectedSemester = null;
+        let selectedDept = null;
+        let selectedSection = null;
+        let sortColumn = null;
+        let sortOrder = 'asc';
+        let timetableType = 'exam'; // Default to exam
+
+        // Function to attach event listeners to table headers for sorting
+        function addHeaderEventListeners() {
+            document.querySelectorAll('#tableHead th').forEach((th, index) => {
+                // Only allow sorting on the exam timetable headers
+                if (timetableType === 'exam') {
+                    th.addEventListener('click', () => {
+                        if (sortColumn === index) {
+                            sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+                        } else {
+                            sortColumn = index;
+                            sortOrder = 'asc';
+                        }
+                        if (selectedYear && selectedSemester && selectedDept && selectedSection) {
+                            displayTimetable(selectedYear, selectedSemester, selectedDept, selectedSection);
+                        }
+                    });
+                }
+            });
+        }
+
+        // Initialize headers
+        updateTableHeaders();
+
+
+        // Event listener for timetable type selection
+        document.querySelectorAll("#typeMenu .dropdown-item").forEach(item => {
+            item.addEventListener("click", function () {
+                timetableType = this.dataset.type;
+                document.getElementById("typeDropdown").innerText = this.innerText;
+                document.getElementById("timetableTitle").innerText = this.innerText;
+                updateTableHeaders(); // Update headers when type changes
+                // Reset selection for consistency
+                selectedYear = null;
+                selectedSemester = null;
+                selectedDept = null;
+                selectedSection = null;
+
+                document.getElementById("yearDropdown").innerText = "Select Year";
+                document.getElementById("semester1Btn").disabled = true;
+                document.getElementById("semester2Btn").disabled = true;
+                document.getElementById("semester1Btn").classList.remove("btn-success");
+                document.getElementById("semester2Btn").classList.remove("btn-success");
+                document.getElementById("deptDropdown").disabled = true;
+                document.getElementById("deptDropdown").innerText = "Select Department";
+                document.getElementById("sectionDropdown").disabled = true;
+                document.getElementById("sectionDropdown").innerText = "Select Section";
+                clearTimetable();
+            });
+        });
+
+        // Event listener for year selection
+        document.querySelectorAll("#yearMenu .dropdown-item").forEach(item => {
+            item.addEventListener("click", function () {
+                selectedYear = this.dataset.year;
+                document.getElementById("yearDropdown").innerText = this.innerText;
+                document.getElementById("semester1Btn").disabled = false;
+                document.getElementById("semester2Btn").disabled = false;
+                document.getElementById("deptDropdown").disabled = true;
+                document.getElementById("deptDropdown").innerText = "Select Department";
+                document.getElementById("sectionDropdown").disabled = true;
+                document.getElementById("sectionDropdown").innerText = "Select Section";
+                // Clear selection dependent state
+                selectedSemester = null;
+                selectedDept = null;
+                selectedSection = null;
+                document.getElementById("semester1Btn").classList.remove("btn-success");
+                document.getElementById("semester2Btn").classList.remove("btn-success");
+                clearTimetable();
+            });
+        });
+
+        // Event listeners for semester buttons
+        document.getElementById("semester1Btn").addEventListener("click", function () {
+            selectedSemester = "Semester 1";
+            document.getElementById("semester1Btn").classList.add("btn-success");
+            document.getElementById("semester2Btn").classList.remove("btn-success");
+            document.getElementById("deptDropdown").disabled = false;
+            document.getElementById("deptDropdown").innerText = "Select Department";
+            document.getElementById("sectionDropdown").disabled = true;
+            document.getElementById("sectionDropdown").innerText = "Select Section";
+            selectedDept = null;
+            selectedSection = null;
+            clearTimetable();
+        });
+
+        document.getElementById("semester2Btn").addEventListener("click", function () {
+            selectedSemester = "Semester 2";
+            document.getElementById("semester2Btn").classList.add("btn-success");
+            document.getElementById("semester1Btn").classList.remove("btn-success");
+            document.getElementById("deptDropdown").disabled = false;
+            document.getElementById("deptDropdown").innerText = "Select Department";
+            document.getElementById("sectionDropdown").disabled = true;
+            document.getElementById("sectionDropdown").innerText = "Select Section";
+            selectedDept = null;
+            selectedSection = null;
+            clearTimetable();
+        });
+
+        // Event listener for department selection
+        document.querySelectorAll("#deptMenu .dropdown-item").forEach(item => {
+            item.addEventListener("click", function () {
+                selectedDept = this.dataset.dept;
+                document.getElementById("deptDropdown").innerText = this.innerText;
+                selectedSection = null;
+                document.getElementById("sectionDropdown").innerText = "Select Section";
+                loadSections(selectedYear, selectedSemester, selectedDept);
+                clearTimetable();
+            });
+        });
+
+        // Event listener for section selection
+        document.addEventListener("click", function (e) {
+            if (e.target.matches("#sectionMenu .dropdown-item")) {
+                selectedSection = e.target.dataset.section;
+                document.getElementById("sectionDropdown").innerText = `Section ${selectedSection}`;
+                displayTimetable(selectedYear, selectedSemester, selectedDept, selectedSection);
+            }
+        });
+
+        // The sorting event listener is now added within updateTableHeaders
+        // so it applies to the correct headers each time.
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>

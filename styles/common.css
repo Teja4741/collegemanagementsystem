@@ -1,0 +1,149 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  overflow-x: hidden;
+  background: url("https://media.cntraveler.com/photos/56953a3965492c403b26f6f0/master/pass/ucla-cr-alamy.jpg") no-repeat center center/cover;
+  color: #333;
+}
+
+.navbar, .navbar-dark {
+  background: rgba(0, 0, 0, 0.9) !important;
+}
+
+.navbar-brand, .nav-link, .dropdown-item {
+  color: white !important;
+}
+
+.navbar-nav .nav-link:hover, .dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 90vh;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  text-align: center;
+}
+
+.hero h1 {
+  font-size: 3rem;
+  font-weight: bold;
+}
+
+.hero p {
+  font-size: 1.5rem;
+}
+
+footer {
+  font-size: 14px;
+  background-color: rgba(0, 0, 0, 0.9);
+  color: white;
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.login-container {
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+  width: 400px;
+  max-width: 90%;
+  text-align: center;
+  margin: auto;
+  margin-top: 5vh;
+}
+
+input, button, select {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+.dashboard-container, .dashboard-card, .container-box {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+  max-width: 1400px;
+  margin: 2rem auto;
+  color: #333;
+}
+
+h2, h3 {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.info p, .teacher-details p {
+  font-size: 1rem;
+  padding: 5px;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+.form-box {
+  margin-bottom: 2rem;
+}
+
+.message {
+  display: none;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 5px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.success {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.error {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+#marks-table {
+  width: 100%;
+  table-layout: auto;
+}
+
+.marks-input {
+  min-width: 80px;
+  padding: 8px;
+}
+
+#marks-table-container {
+  overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+  .dashboard-container, .dashboard-card, .container-box {
+    width: 90%;
+    padding: 15px;
+  }
+  .navbar-nav {
+    text-align: center;
+  }
+}
